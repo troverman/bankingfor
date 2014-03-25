@@ -1,11 +1,141 @@
 {{extend 'layout.html'}}
-<br><br>
-<h1>bankingfor</h1><hr>
-<br>
-<p class="lead">how can we improve the banking system..?</p>
+<style>
+#index-header{
+    background-color:rgb(247,247,247);
+    border-bottom:1px solid rgb(225, 225, 225);
+    padding-top:15px;
+    padding-bottom:15px;
+}
+#index-header-container{
+    margin-left:5%;
+    margin-right:5%;
+}
+#share-footer{
+    background-color:rgb(247,247,247);
+    border-top:1px solid rgb(225, 225, 225);
+}
+#share-footer-container{margin-left:5%;margin-right:5%;}
+</style>
+<script language="javascript" type="text/javascript" src="{{=URL(request.application,'static','js/jquery.flot.js')}}"></script>
+<script language="javascript" type="text/javascript" src="{{=URL(request.application,'static','js/jquery.flot.selection.js')}}"></script>
+<script language="javascript" type="text/javascript" src="{{=URL(request.application,'static','js/jquery.flot.time.js')}}"></script>
+<script language="javascript" type="text/javascript" src="{{=URL(request.application,'static','js/jquery.thumbnailScroller.js')}}"></script>
+<script type="text/javascript">
+    {{an_array=[]}}
+    {{import time}}
+    {{array = [1,2,3,4,5]}}
+    {{for counter, value in enumerate(array):}}
+        {{an_array.append([ value*1000, int(value) ])}}
+    {{pass}}
+    $(function() {
+        var data = '';
+        var show_graph_lines = true;
+        if (data == ''){data = {{=an_array}};}                  
+        var options = {
+            series: {
+                lines: {show: true},                            
+                points: {show: true}
+            },
+            grid: {
+                hoverable: true,
+                clickable: true
+            },
+            xaxis:{mode:"time",},
+            yaxis: {show: true,},
+            selection: {mode: "x"},
+        };
+        var placeholder = $.plot("#placeholder", [data], options);
+        $("#placeholder").bind("plotselected", function (event, ranges) {
+            placeholder = $.plot("#placeholder", [data], $.extend(true, {}, options, {
+            xaxis: {
+                min: ranges.xaxis.from,
+                max: ranges.xaxis.to
+            },
+            lines: { show: show_graph_lines },
+            points: { show: true }
+            }));
+        overview.setSelection(ranges, true);
+        }); 
+        function showTooltip(x, y, contents) {
+            $("<div id='tooltip'>" + contents + "</div>").css({
+            position: "absolute",
+            display: "none",
+            top: y + 5,
+            left: x + 5,
+            border: "1px solid #fdd",
+            padding: "2px",
+            "background-color": "#fee",
+            opacity: 0.80
+            }).appendTo("body").fadeIn(200);
+        }           
+        var previousPoint = null;
+        $("#placeholder").bind("plothover", function (event, pos, item) {
+            var str = "(" + pos.x.toFixed(2) + ", " + pos.y.toFixed(2) + ")";
+            $("#hoverdata").text(str);
+            if (item) {
+                if (previousPoint != item.dataIndex) {         
+                    previousPoint = item.dataIndex;
+                    $("#tooltip").remove();
+                    var x = item.datapoint[0].toFixed(2),
+                    y = item.datapoint[1].toFixed(2);          
+                    showTooltip(item.pageX, item.pageY,
+                    item.series.label + " of " + x + " = " + y);
+                }
+            } else {
+                $("#tooltip").remove();
+                previousPoint = null;            
+            }           
+        });   
+        $("#placeholder").bind("plotclick", function (event, pos, item) {
+            if (item) {
+                $("#clickdata").text(" - click point " + item.dataIndex + " in " + item.series.label);
+                plot.highlight(item.series, item.datapoint);
+            }
+        });
+    });
+</script>
 
-<h3>bankingfor....everyone</h3>
-<h2>crowd owned bank, how it should be</h2>
-<h3><a href="http://www.voetr.com/committee/bankingfor">voetr committee</a></h3>
-<br>
-<iframe width="420" height="315" src="//www.youtube.com/embed/jqvKjsIxT_8" frameborder="0" allowfullscreen></iframe>
+
+<div id="index-header">
+    <div id="index-header-container">
+		<h3>bankingfor....everyone</h3>
+		<p class="lead">how can we improve the banking system..?</p>
+    </div>
+</div>
+<div class="centered-width">
+	<h2 style="text-align:center;">crowd owned bank, how it should be</h2>
+	<h2 style="text-align:center;">manage your finacnes / numerical representation of value</h2>
+	<h2 style="text-align:center;">view how youre spending and on what and on what market and graphs</h2>
+    <h2 style="text-align:center;">transparent, where does the money flow???</h2>
+
+	<h3 style="text-align:center;">governed by the <a href="http://www.voetr.com/committee/bankingfor">voetr committee</a></h3>
+	<br>
+        <p class="lead" style="text-align:center;">how can we improve the banking system..?</p>
+        <p class="lead" style="text-align:center;">how can we improve the banking system..?</p>
+        <p class="lead" style="text-align:center;">how can we improve the banking system..?</p>
+        <p class="lead" style="text-align:center;">how can we improve the banking system..?</p>
+        <p class="lead" style="text-align:center;">how can we improve the banking system..?</p>
+        <p class="lead" style="text-align:center;">how can we improve the banking system..?</p>
+
+	<iframe width="420" height="315" src="//www.youtube.com/embed/jqvKjsIxT_8" frameborder="0" allowfullscreen></iframe>
+        <p class="lead" style="text-align:center;">how can we improve the banking system..?</p>
+        <p class="lead" style="text-align:center;">how can we improve the banking system..?</p>
+        <p class="lead" style="text-align:center;">how can we improve the banking system..?</p>
+
+    <div>
+        <div id="placeholder" style="width:75%;height:250px;display: table;margin: 0 auto;"></div>
+    </div>
+
+
+</div>
+<br><br><br>
+<div id="share-footer">
+    <div id="share-footer-container">
+    	oh lol
+    	<p class="lead">share plox</p>
+        <p style="float:right;" class="lead">get the app</p><br>
+        <a style="float:right;" href=""><img class="social" style="height:48px;" src="/bankingfor/static/images/app_store_icon.png" /></a>
+        <a style="float:right;" href=""><img class="social" style="height:48px;" src="/bankingfor/static/images/android_marketplace_icon.png" /></a>
+	</div>
+</div>
+<br><br><br><br>
