@@ -20,6 +20,163 @@
 <script language="javascript" type="text/javascript" src="{{=URL(request.application,'static','js/jquery.flot.selection.js')}}"></script>
 <script language="javascript" type="text/javascript" src="{{=URL(request.application,'static','js/jquery.flot.time.js')}}"></script>
 <script language="javascript" type="text/javascript" src="{{=URL(request.application,'static','js/jquery.thumbnailScroller.js')}}"></script>
+
+
+
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/topojson.v1.min.js"></script>
+
+<style>
+
+.hexagon {
+  fill: white;
+  pointer-events: all;
+}
+
+.hexagon path {
+  -webkit-transition: fill 250ms linear;
+  transition: fill 250ms linear;
+}
+
+.hexagon :hover {
+  fill: green;
+}
+
+.hexagon .fill {
+  fill: rgb(63,129,87);
+}
+
+.mesh {
+  fill: none;
+  stroke: #000;
+  stroke-opacity: .2;
+  pointer-events: none;
+}
+
+.border {
+  fill: none;
+  stroke: #000;
+  stroke-width: 2px;
+  pointer-events: none;
+}
+
+</style>
+<script>
+$(function() {
+
+var width = 10000,
+    height = 250,
+    radius = 25;
+
+var topology = hexTopology(radius, width, height);
+
+var projection = hexProjection(radius);
+
+var path = d3.geo.path()
+    .projection(projection);
+
+var svg = d3.select("#iamtest").append("svg")
+    .attr("width", '100%')
+    .attr("height", height);
+
+svg.append("g")
+    .attr("class", "hexagon")
+  .selectAll("path")
+    .data(topology.objects.hexagons.geometries)
+  .enter().append("path")
+    .attr("d", function(d) { return path(topojson.feature(topology, d)); })
+    .attr("class", function(d) { return d.fill ? "fill" : null; })
+    .on("mousedown", mousedown)
+    .on("mousemove", mousemove)
+    .on("mouseup", mouseup);
+
+svg.append("path")
+    .datum(topojson.mesh(topology, topology.objects.hexagons))
+    .attr("class", "mesh")
+    .attr("d", path);
+
+var border = svg.append("path")
+    .attr("class", "border")
+    .call(redraw);
+
+var mousing = 0;
+
+function mousedown(d) {
+  mousing = d.fill ? -1 : +1;
+  mousemove.apply(this, arguments);
+}
+
+function mousemove(d) {
+  if (mousing) {
+    d3.select(this).classed("fill", d.fill = mousing > 0);
+    border.call(redraw);
+  }
+}
+
+function mouseup() {
+  mousemove.apply(this, arguments);
+  mousing = 0;
+}
+
+function redraw(border) {
+  border.attr("d", path(topojson.mesh(topology, topology.objects.hexagons, function(a, b) { return a.fill ^ b.fill; })));
+}
+
+function hexTopology(radius, width, height) {
+  var dx = radius * 2 * Math.sin(Math.PI / 3),
+      dy = radius * 1.5,
+      m = Math.ceil((height + radius) / dy) + 1,
+      n = Math.ceil(width / dx) + 1,
+      geometries = [],
+      arcs = [];
+
+  for (var j = -1; j <= m; ++j) {
+    for (var i = -1; i <= n; ++i) {
+      var y = j * 2, x = (i + (j & 1) / 2) * 2;
+      arcs.push([[x, y - 1], [1, 1]], [[x + 1, y], [0, 1]], [[x + 1, y + 1], [-1, 1]]);
+    }
+  }
+
+  for (var j = 0, q = 3; j < m; ++j, q += 6) {
+    for (var i = 0; i < n; ++i, q += 3) {
+      geometries.push({
+        type: "Polygon",
+        arcs: [[q, q + 1, q + 2, ~(q + (n + 2 - (j & 1)) * 3), ~(q - 2), ~(q - (n + 2 + (j & 1)) * 3 + 2)]],
+        fill: Math.random() > i / n * 2
+      });
+    }
+  }
+
+  return {
+    transform: {translate: [0, 0], scale: [1, 1]},
+    objects: {hexagons: {type: "GeometryCollection", geometries: geometries}},
+    arcs: arcs
+  };
+}
+
+function hexProjection(radius) {
+  var dx = radius * 2 * Math.sin(Math.PI / 3),
+      dy = radius * 1.5;
+  return {
+    stream: function(stream) {
+      return {
+        point: function(x, y) { stream.point(x * dx / 2, (y - (2 - (y & 1)) / 3) * dy / 2); },
+        lineStart: function() { stream.lineStart(); },
+        lineEnd: function() { stream.lineEnd(); },
+        polygonStart: function() { stream.polygonStart(); },
+        polygonEnd: function() { stream.polygonEnd(); }
+      };
+    }
+  };
+}
+});
+
+</script>
+
+<div id="iamtest">
+
+</div>
+
 <script type="text/javascript">
     {{an_array=[]}}
     {{import time}}
@@ -94,42 +251,170 @@
         });
     });
 </script>
+<!--<div style="background-image: url(../bankingfor/static/images/cam.JPG); height: 400px;">
+    <br>
+    <h5 style="text-align:center">crowd owned bank, how it should be</h5>
+    <p style="text-align:center"><i style="font-size:128px;color:rgb(240,240,240);" class="fa fa-refresh fa-spin"></i></p>
+    <p class="lead" style="text-align:center;">this is some text yo</p>
+    <p class="lead btn" style="display:block;margin: 0 auto;width:100px;padding:10px;">i love this</a>
 
-
+</div>-->
 <div id="index-header">
     <div id="index-header-container">
 		<h3>bankingfor....everyone</h3>
 		<p class="lead">improving the banking system</p>
+        <p class="btn" style=""><i class="fa fa-bar-chart-o"></i></p>
+        <div style="clear:both;"></div>
         <!--<img style="" class="img-polaroid" src="/bankingfor/static/images/bank-card.png"/>
         <img style="" class="img-polaroid" src="/bankingfor/static/images/cards.png"/>-->
 
     </div>
 </div>
+
 <div class="centered-width">
-	<h2 style="">crowd owned bank, how it should be</h2>
-	<h2 style="">manage your finances</h2>
-	<h2 style="">view your spending and on what</h2>
-    <h2 style="">transparent, where does the money flow???</h2>
+    <h5>crowd owned bank, how it should be</h5>
+	<h5 style="">manage your finances</h5>
+	<h5 style="">view your spending and on what</h5>
+    <h5 style="">transparent, where does the money flow?</h5>
+    <h5 style="">what's going on with your finances? <a href="/">bankingfor</a> organizes and categorizes your spending</h5>
+
+<style>
+
+circle {
+  stroke: #fff;
+}
+
+</style>
+<script>
+    $(function() {
+
+var width = 960,
+    height = 500,
+    padding = 6, // separation between nodes
+    maxRadius = 12;
+
+var n = 200, // total number of nodes
+    m = 10; // number of distinct clusters
+
+var color = d3.scale.category10()
+    .domain(d3.range(m));
+
+var x = d3.scale.ordinal()
+    .domain(d3.range(m))
+    .rangePoints([0, width], 1);
+
+var nodes = d3.range(n).map(function() {
+  var i = Math.floor(Math.random() * m),
+      v = (i + 1) / m * -Math.log(Math.random());
+  return {
+    radius: Math.sqrt(v) * maxRadius,
+    color: color(i),
+    cx: x(i),
+    cy: height / 2
+  };
+});
+
+var force = d3.layout.force()
+    .nodes(nodes)
+    .size([width, height])
+    .gravity(0)
+    .charge(0)
+    .on("tick", tick)
+    .start();
+
+var svg = d3.select("#spending").append("svg")
+    .attr("width", '100%')
+    .attr("height", height);
+
+var circle = svg.selectAll("circle")
+    .data(nodes)
+  .enter().append("circle")
+    .attr("r", function(d) { return d.radius; })
+    .style("fill", function(d) { return d.color; })
+    .call(force.drag);
+
+function tick(e) {
+  circle
+      .each(gravity(.2 * e.alpha))
+      .each(collide(.5))
+      .attr("cx", function(d) { return d.x; })
+      .attr("cy", function(d) { return d.y; });
+}
+
+// Move nodes toward cluster focus.
+function gravity(alpha) {
+  return function(d) {
+    d.y += (d.cy - d.y) * alpha;
+    d.x += (d.cx - d.x) * alpha;
+  };
+}
+
+// Resolve collisions between nodes.
+function collide(alpha) {
+  var quadtree = d3.geom.quadtree(nodes);
+  return function(d) {
+    var r = d.radius + maxRadius + padding,
+        nx1 = d.x - r,
+        nx2 = d.x + r,
+        ny1 = d.y - r,
+        ny2 = d.y + r;
+    quadtree.visit(function(quad, x1, y1, x2, y2) {
+      if (quad.point && (quad.point !== d)) {
+        var x = d.x - quad.point.x,
+            y = d.y - quad.point.y,
+            l = Math.sqrt(x * x + y * y),
+            r = d.radius + quad.point.radius + (d.color !== quad.point.color) * padding;
+        if (l < r) {
+          l = (l - r) / l * alpha;
+          d.x -= x *= l;
+          d.y -= y *= l;
+          quad.point.x += x;
+          quad.point.y += y;
+        }
+      }
+      return x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1;
+    });
+  };
+}
+    });
+
+</script>
+
+
+<div id="spending"></div>
+
+
+
 
     <table style="margin-left:auto;margin-right:auto">
     <tr>
-        <td><img style="width:300px;height:300px;" class="img-polaroid" src="/bankingfor/static/images/Infinity.gif"/></td>
-        <td><img style="width:300px;height:300px;" class="img-polaroid" src="/bankingfor/static/images/bitcoins.jpg"/></td>
-        <td><img style="width:300px;height:300px;" class="img-polaroid" src="/bankingfor/static/images/dollars.jpeg"/></td>
+        <td><p><i style="font-size:128px;" class="fa fa-refresh fa-spin"></i></p></td>
+        <td><img style="width:128px;height:128px;" class="img-polaroid" src="/bankingfor/static/images/Infinity.gif"/></td>
+        <td><img style="width:128px;height:128px;" class="img-polaroid" src="/bankingfor/static/images/bitcoins.jpg"/></td>
+        <td><img style="width:128px;height:128px;" class="img-polaroid" src="/bankingfor/static/images/dollars.jpeg"/></td>
+        <td><p><i style="font-size:128px;" class="fa fa-credit-card fa-spin"></i></p></td>
     </tr>
     </table>
 
+</div>
+<br><br><br>
+<div style="background-color:rgb(240,240,240);border-top:2px solid rgb(200,200,200);border-bottom:2px solid rgb(200,200,200);">
+<div class="centered-width">
 	<h3 style="">governed by the <a href="http://www.voetr.com/committee/bankingfor/">voetr committee</a></h3>
 	<br>
     <p class="lead" style="">take my abstract bankpoints as value!</p>
-    <p class="lead" style=""><a href="http://www.epoint.me/">epoint.me</a> connected</p>
-    <br><br>
-    <p style="text-align:center"><i style="font-size:256px;" class="fa fa-refresh fa-spin"></i></p>
-    <br><br>
-    <p style="text-align:center"><i style="font-size:256px;" class="fa fa-credit-card fa-spin"></i></p>
-    <br><br>
-    <p style="text-align:center"><i style="font-size:256px;" class="fa fa-money fa-spin"></i></p>
-    
+    <p class="lead" style=""><a href="http://www.epoint.me/">epoint.me</a> connected, bitcoin wallet, etc</p> 
+    <h2><a href="http://www.insuringfor.com/">insuringfor</a> connected</h2>
+    <h2>automatic taxes</h2>
+
+    <h2>see where every dime goes and make money decisions you feel good about.</h2>
+    <h2>choose goals</h2>
+    <h2>get and stick to a plan.</h2>
+</div>
+</div>
+<br><br><br>
+
+
     <p class="lead" style="">the promise of value now and in the future</p>
     <p class="lead" style="">get a loan... pay back with specified value.. aka charitable points.. interest only in this type of value. a promise to ourselves that value today is even better tomomrrow.</p>
 
@@ -138,7 +423,6 @@
     </div>
 
 
-</div>
 <br><br><br>
 <div id="share-footer">
     <div id="share-footer-container">
